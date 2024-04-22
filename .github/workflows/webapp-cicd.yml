@@ -23,23 +23,17 @@ jobs:
         run: dotnet build --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+        run: dotnet publish -c Release -o myapp  # Publishing directly to a folder named 'myapp'
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v3
         with:
           name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          path: myapp  # Adjust the path to the output directory of dotnet publish
 
   deploy:
     runs-on: windows-latest
     needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
-    permissions:
-      contents: read
-      id-token: write
 
     steps:
       - name: Download artifact from build job
@@ -48,9 +42,9 @@ jobs:
           name: .net-app
 
       - name: Deploy to Azure Web App using Publish Profile
-        id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'myDotNetdhaapps'
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: ${{ github.workspace }}/.net-app
+          package: .net-app  # This should be the directory where the artifact is unpacked
+          slot-name: production
